@@ -1,0 +1,62 @@
+<% content_for :title, "Seeder · Shopify Product Seeder" %>
+
+<h1>Product seeder</h1>
+
+<section class="card">
+  <p class="muted">
+    Imports 3 products from DummyJSON into
+    <strong><%= @setting.shop_domain.presence || "your store" %></strong>,
+    each with 2 variants and an image. Products already imported are skipped.
+  </p>
+  <%= button_to "Seed Store", product_seeds_path, method: :post, class: "btn",
+        disabled: !@setting.configured?,
+        form: { data: { turbo_submits_with: "Seeding… please wait" } } %>
+  <% unless @setting.configured? %>
+    <p class="muted"><%= link_to "Configure your Shopify settings", edit_settings_path %> first.</p>
+  <% end %>
+</section>
+
+<% if @run %>
+  <section class="card">
+    <h2>Last run
+      <span class="badge <%= { "completed" => "badge-ok", "failed" => "badge-error", "completed_with_errors" => "badge-error" }.fetch(@run.status, "badge-muted") %>">
+        <%= @run.status.humanize %>
+      </span>
+    </h2>
+    <p class="muted"><%= l(@run.created_at, format: :long) %></p>
+
+    <div class="stats">
+      <div class="stat"><span class="stat-num"><%= @run.created_count %></span>Created</div>
+      <div class="stat"><span class="stat-num"><%= @run.updated_count %></span>Updated</div>
+      <div class="stat"><span class="stat-num"><%= @run.skipped_count %></span>Skipped</div>
+      <div class="stat"><span class="stat-num stat-fail"><%= @run.failed_count %></span>Failed</div>
+    </div>
+
+    <% if @run.error_message.present? %>
+      <div class="flash flash-alert"><%= @run.error_message %></div>
+    <% end %>
+
+    <% if @run.results.any? %>
+      <table class="results">
+        <thead><tr><th>DummyJSON ID</th><th>Product</th><th>Result</th><th>Details</th></tr></thead>
+        <tbody>
+          <% @run.results.each do |r| %>
+            <tr>
+              <td><%= r["source_id"] %></td>
+              <td><%= r["title"] %></td>
+              <td><span class="badge outcome-<%= r["outcome"] %>"><%= r["outcome"].humanize %></span></td>
+              <td>
+                <% if r["shopify_id"].present? %>
+                  <%= link_to "View in Shopify", "https://#{@setting.shop_domain}/admin/products/#{r['shopify_id'].split('/').last}", target: "_blank", rel: "noopener" %>
+                <% end %>
+                <% Array(r["messages"]).each do |m| %>
+                  <div class="<%= r["outcome"] == "failed" ? "error-text" : "muted" %>"><%= m %></div>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </section>
+<% end %>

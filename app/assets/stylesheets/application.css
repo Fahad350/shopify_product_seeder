@@ -22,3 +22,15 @@ main { max-width: 760px; margin: 24px auto; padding: 0 16px; }
 .flash-notice { background: #dafbe1; color: var(--ok); }
 .flash-alert { background: #ffebe9; color: var(--err); }
 .flash ul { margin: 0; padding-left: 18px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+.stat { border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; color: var(--muted); }
+.stat-num { display: block; font-size: 1.8rem; font-weight: 700; color: var(--fg); }
+.stat-num.stat-fail { color: var(--err); }
+.results { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.results th, .results td { text-align: left; padding: 8px; border-top: 1px solid var(--border); vertical-align: top; }
+.outcome-created { background: #dafbe1; color: var(--ok); }
+.outcome-updated { background: #ddf4ff; color: #0969da; }
+.outcome-skipped { background: #eaeef2; color: var(--muted); }
+.outcome-failed { background: #ffebe9; color: var(--err); }
+.error-text { color: var(--err); }
+@media (max-width: 560px) { .stats { grid-template-columns: repeat(2, 1fr); } }

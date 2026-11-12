@@ -5,5 +5,7 @@ Rails.application.routes.draw do
     post :test_connection
   end
 
-  root to: redirect("/settings/edit")
+  resources :product_seeds, only: %i[index create]
+
+  root "product_seeds#index"
 end
