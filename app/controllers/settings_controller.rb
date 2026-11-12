@@ -10,8 +10,11 @@ class SettingsController < ApplicationController
     attrs = attrs.except(:client_secret) if attrs[:client_secret].blank? && @setting.persisted?
 
     if @setting.update(attrs)
-      check_connection
-      redirect_to edit_settings_path, notice: "Settings saved."
+      if check_connection
+        redirect_to edit_settings_path, notice: "Settings saved."
+      else
+        redirect_to edit_settings_path, alert: "Settings saved, but the connection failed: #{@setting.connection_message}"
+      end
     else
       render :edit, status: :unprocessable_entity
     end
@@ -21,7 +24,7 @@ class SettingsController < ApplicationController
     setting = ShopSetting.current
     if setting.configured?
       @setting = setting
-      check_connection(force_refresh: true)
+      check_connection
     end
     redirect_to edit_settings_path
   end
@@ -32,11 +35,14 @@ class SettingsController < ApplicationController
     params.require(:shop_setting).permit(:shop_domain, :client_id, :client_secret)
   end
 
-  def check_connection(force_refresh: true)
-    service = Shopify::TokenService.new(@setting)
-    force_refresh ? service.refresh! : service.token
+  # Always requests a fresh token so the check reflects the saved credentials.
+  # Returns true when Shopify issued a token.
+  def check_connection
+    Shopify::TokenService.new(@setting).refresh!
     @setting.record_connection!(ok: true, message: "Access token obtained via client credentials.")
+    true
   rescue Shopify::TokenService::Error => e
     @setting.record_connection!(ok: false, message: e.message)
+    false
   end
 end

@@ -24,6 +24,8 @@ module Shopify
       { name: "Premium", price_factor: 1.25, sku_suffix: "PRM" }
     ].freeze
 
+    # Product fields read after a lookup or write: used for the completeness
+    # check (2 variants + an image) and the dashboard thumbnail.
     PRODUCT_FIELDS = <<~GQL.freeze
       id title handle
       variantsCount { count }

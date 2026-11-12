@@ -59,6 +59,13 @@ class Shopify::TokenServiceTest < ActiveSupport::TestCase
     assert_match(/Store not found/, error.message)
   end
 
+  test "connection reset raises a readable error" do
+    stub_request(:post, ShopifyTestHelpers::TOKEN_URL).to_raise(Errno::ECONNRESET)
+
+    error = assert_raises(Shopify::TokenService::Error) { @service.token }
+    assert_match(/Could not reach .*ECONNRESET/, error.message)
+  end
+
   test "network timeout raises a readable error" do
     stub_request(:post, ShopifyTestHelpers::TOKEN_URL).to_timeout
 

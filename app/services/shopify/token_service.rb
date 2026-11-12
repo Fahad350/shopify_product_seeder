@@ -62,7 +62,7 @@ module Shopify
       end
     rescue JSON::ParserError
       raise Error, "Shopify returned an unreadable token response."
-    rescue Net::OpenTimeout, Net::ReadTimeout, SocketError, Errno::ECONNREFUSED, OpenSSL::SSL::SSLError => e
+    rescue Net::OpenTimeout, Net::ReadTimeout, SocketError, Errno::ECONNREFUSED, Errno::ECONNRESET, OpenSSL::SSL::SSLError => e
       raise Error, "Could not reach #{setting.shop_domain} (#{e.class.name.demodulize})."
     end
 

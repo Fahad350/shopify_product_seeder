@@ -26,6 +26,8 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     stub_request(:post, ShopifyTestHelpers::TOKEN_URL).to_return(status: 401)
 
     patch settings_path, params: { shop_setting: { shop_domain: ShopifyTestHelpers::SHOP, client_id: "cid", client_secret: "wrong" } }
+    assert_match(/Settings saved, but the connection failed: Shopify rejected the credentials/, flash[:alert])
+    assert_nil flash[:notice]
     follow_redirect!
 
     assert_select ".status strong", "Connection failed"
