@@ -15,10 +15,14 @@ class SeedRun < ApplicationRecord
 
   def finish!(error: nil)
     self.error_message = error
-    self.status = if error then "failed"
-                  elsif failed_count.positive? then "completed_with_errors"
-                  else "completed"
-                  end
+    self.status =
+      if error
+        "failed"
+      elsif failed_count.positive?
+        "completed_with_errors"
+      else
+        "completed"
+      end
     self.finished_at = Time.current
     save!
   end

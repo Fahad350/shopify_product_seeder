@@ -33,7 +33,7 @@ module Shopify
 
     def fetch_and_cache
       data = request_token
-      ttl = [data.fetch("expires_in", 3600).to_i.seconds - EXPIRY_MARGIN, 1.minute].max
+      ttl = [ data.fetch("expires_in", 3600).to_i.seconds - EXPIRY_MARGIN, 1.minute ].max
       Rails.cache.write(cache_key, data.fetch("access_token"), expires_in: ttl)
       data.fetch("access_token")
     end

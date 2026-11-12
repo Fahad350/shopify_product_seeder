@@ -56,14 +56,7 @@ module Shopify
     end
 
     def handle(response)
-      unless response.is_a?(Net::HTTPSuccess)
-        raise Error, case response
-                     when Net::HTTPForbidden then "Access denied (HTTP 403). Check the app's API scopes."
-                     when Net::HTTPNotFound then "Shopify API not found (HTTP 404). Check the shop domain and API version #{API_VERSION}."
-                     when Net::HTTPTooManyRequests then "Shopify rate limit reached (HTTP 429). Try again shortly."
-                     else "Shopify API request failed (HTTP #{response.code})."
-                     end
-      end
+      raise Error, http_error_message(response) unless response.is_a?(Net::HTTPSuccess)
 
       body = JSON.parse(response.body)
       if body["errors"].present?
@@ -75,12 +68,21 @@ module Shopify
       raise Error, "Shopify returned an unreadable GraphQL response."
     end
 
+    def http_error_message(response)
+      case response
+      when Net::HTTPForbidden then "Access denied (HTTP 403). Check the app's API scopes."
+      when Net::HTTPNotFound then "Shopify API not found (HTTP 404). Check the shop domain and API version #{API_VERSION}."
+      when Net::HTTPTooManyRequests then "Shopify rate limit reached (HTTP 429). Try again shortly."
+      else "Shopify API request failed (HTTP #{response.code})."
+      end
+    end
+
     def format_errors(errors)
       Array(errors).map { |e| e.is_a?(Hash) ? e["message"] : e.to_s }.compact.join("; ")
     end
 
     def sanitize(message)
-      secrets = [setting.client_secret, token_service.cached_token].compact_blank
+      secrets = [ setting.client_secret, token_service.cached_token ].compact_blank
       secrets.reduce(message.to_s) { |msg, secret| msg.gsub(secret, "[FILTERED]") }
     end
   end

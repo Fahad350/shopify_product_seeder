@@ -78,6 +78,10 @@ module Shopify
           run.finish!
         rescue GraphqlClient::Error, DummyJson::ProductFetcher::Error => e
           run.finish!(error: e.message)
+        rescue StandardError => e
+          # Never leave a run stuck in "running"; the details go to the log, not the UI.
+          run.finish!(error: "Unexpected error (#{e.class.name}). See the application log.")
+          raise
         end
         run
       end
@@ -93,7 +97,7 @@ module Shopify
 
       if existing && complete?(existing)
         return base.merge(outcome: "skipped", shopify_id: existing["id"], image_url: image_url(existing, source),
-                          messages: ["Already imported."])
+                          messages: [ "Already imported." ])
       end
 
       payload = client.query(PRODUCT_SET, input: product_input(source), identifier: identifier(source["id"]))["productSet"]
@@ -105,11 +109,11 @@ module Shopify
       product = payload["product"]
       base.merge(outcome: existing ? "updated" : "created", shopify_id: product&.dig("id"),
                  image_url: image_url(product, source),
-                 messages: existing ? ["Existing product was incomplete and has been repaired."] : [])
+                 messages: existing ? [ "Existing product was incomplete and has been repaired." ] : [])
     rescue GraphqlClient::AuthenticationError
       raise # credentials problem: stop the whole run
     rescue GraphqlClient::Error => e
-      base.merge(outcome: "failed", messages: [e.message]) # keep going with the next product
+      base.merge(outcome: "failed", messages: [ e.message ]) # keep going with the next product
     end
 
     def find_existing(source_id)
@@ -140,16 +144,16 @@ module Shopify
         vendor: source["brand"].presence || "DummyJSON",
         productType: source["category"].to_s.titleize,
         status: "ACTIVE",
-        tags: ["dummyjson", "seeded"],
-        productOptions: [{ name: "Edition", values: VARIANTS.map { |v| { name: v[:name] } } }],
+        tags: [ "dummyjson", "seeded" ],
+        productOptions: [ { name: "Edition", values: VARIANTS.map { |v| { name: v[:name] } } } ],
         variants: VARIANTS.map do |v|
           {
-            optionValues: [{ optionName: "Edition", name: v[:name] }],
+            optionValues: [ { optionName: "Edition", name: v[:name] } ],
             price: (base_price * v[:price_factor]).round(2).to_s("F"),
             sku: "#{base_sku}-#{v[:sku_suffix]}"
           }
         end,
-        files: [{ originalSource: source["thumbnail"], contentType: "IMAGE", alt: source["title"] }]
+        files: [ { originalSource: source["thumbnail"], contentType: "IMAGE", alt: source["title"] } ]
         # The DummyJSON ID metafield is written by productSet from the customId identifier.
       }
     end
