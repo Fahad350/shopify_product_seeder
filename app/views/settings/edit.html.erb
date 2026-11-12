@@ -1,0 +1,61 @@
+<% content_for :title, "Settings · Shopify Product Seeder" %>
+
+<h1>Shopify settings</h1>
+
+<section class="card">
+  <h2>Connection status</h2>
+  <% if !@setting.persisted? %>
+    <span class="badge badge-muted">Not configured</span>
+  <% elsif @setting.connected? %>
+    <span class="badge badge-ok">Connected</span>
+  <% elsif @setting.connection_status == "failed" %>
+    <span class="badge badge-error">Failed</span>
+  <% else %>
+    <span class="badge badge-muted">Not checked</span>
+  <% end %>
+
+  <% if @setting.connection_message.present? %>
+    <p class="muted"><%= @setting.connection_message %></p>
+  <% end %>
+  <% if @setting.last_checked_at %>
+    <p class="muted">Last checked <%= time_ago_in_words(@setting.last_checked_at) %> ago</p>
+  <% end %>
+
+  <% if @setting.configured? %>
+    <%= button_to "Test connection", test_connection_settings_path, method: :post, class: "btn btn-secondary" %>
+  <% end %>
+</section>
+
+<section class="card">
+  <h2>Credentials</h2>
+  <%= form_with model: @setting, url: settings_path, method: :patch do |f| %>
+    <% if @setting.errors.any? %>
+      <div class="flash flash-alert">
+        <ul>
+          <% @setting.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="field">
+      <%= f.label :shop_domain, "Shop domain" %>
+      <%= f.text_field :shop_domain, placeholder: "your-store.myshopify.com", autocomplete: "off" %>
+    </div>
+
+    <div class="field">
+      <%= f.label :client_id, "Client ID" %>
+      <%= f.text_field :client_id, autocomplete: "off" %>
+    </div>
+
+    <div class="field">
+      <%= f.label :client_secret, "Client secret" %>
+      <%# Never render the stored secret back into the page. %>
+      <%= f.password_field :client_secret, value: nil, autocomplete: "new-password",
+            placeholder: (@setting.persisted? ? "•••••••• (leave blank to keep current)" : "") %>
+    </div>
+
+    <%= f.submit "Save Settings", class: "btn" %>
+  <% end %>
+</section>

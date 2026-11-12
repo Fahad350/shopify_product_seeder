@@ -1,10 +1,24 @@
-/*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
- */
+:root { --fg: #1f2328; --muted: #656d76; --border: #d0d7de; --bg: #f6f8fa; --ok: #1a7f37; --err: #cf222e; --accent: #008060; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: var(--bg); }
+.nav { display: flex; gap: 16px; padding: 12px 24px; background: #fff; border-bottom: 1px solid var(--border); }
+.nav a { color: var(--fg); text-decoration: none; font-weight: 600; }
+.nav a.active { color: var(--accent); }
+main { max-width: 760px; margin: 24px auto; padding: 0 16px; }
+.card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.card h2 { margin-top: 0; font-size: 1.1rem; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-weight: 600; margin-bottom: 4px; }
+.field input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; }
+.btn { background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 9px 16px; font-size: 1rem; cursor: pointer; }
+.btn-secondary { background: #fff; color: var(--fg); border: 1px solid var(--border); }
+.btn:disabled { opacity: .6; cursor: progress; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+.badge-ok { background: #dafbe1; color: var(--ok); }
+.badge-error { background: #ffebe9; color: var(--err); }
+.badge-muted { background: #eaeef2; color: var(--muted); }
+.muted { color: var(--muted); }
+.flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; }
+.flash-notice { background: #dafbe1; color: var(--ok); }
+.flash-alert { background: #ffebe9; color: var(--err); }
+.flash ul { margin: 0; padding-left: 18px; }

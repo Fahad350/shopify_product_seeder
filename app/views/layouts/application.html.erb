@@ -24,6 +24,14 @@
   </head>
 
   <body>
-    <%= yield %>
+    <nav class="nav">
+      <%= link_to "Settings", edit_settings_path, class: ("active" if controller_name == "settings") %>
+    </nav>
+    <main>
+      <% flash.each do |type, msg| %>
+        <div class="flash flash-<%= type %>"><%= msg %></div>
+      <% end %>
+      <%= yield %>
+    </main>
   </body>
 </html>
