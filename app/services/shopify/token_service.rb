@@ -22,6 +22,11 @@ module Shopify
       fetch_and_cache
     end
 
+    # Token currently in the cache, without requesting a new one.
+    def cached_token
+      Rails.cache.read(cache_key)
+    end
+
     private
 
     attr_reader :setting
