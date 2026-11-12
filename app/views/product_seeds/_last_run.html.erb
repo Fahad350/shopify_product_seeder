@@ -1,0 +1,26 @@
+<section class="card">
+  <div class="card-head">
+    <h2>Last run</h2>
+    <div class="card-head-meta">
+      <span class="meta"><%= time_ago_in_words(run.created_at) %> ago</span>
+      <span class="badge <%= run_status_badge_class(run.status) %>"><%= run.status.humanize %></span>
+    </div>
+  </div>
+
+  <% if run.error_message.present? %>
+    <div class="card-body"><div class="flash flash-alert flash-inline"><%= run.error_message %></div></div>
+  <% end %>
+
+  <% if run.results.any? %>
+    <div class="table-wrap">
+      <table class="results">
+        <thead>
+          <tr><th>Product</th><th>DummyJSON ID</th><th>Result</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+          <%= render partial: "result_row", collection: run.results, as: :result, locals: { setting: setting } %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</section>

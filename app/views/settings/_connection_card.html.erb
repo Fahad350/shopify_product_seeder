@@ -1,0 +1,27 @@
+<% state = connection_state(setting) %>
+<aside class="card">
+  <div class="card-head"><h2>Connection</h2></div>
+  <div class="card-body">
+    <div class="status <%= state[:css] %>">
+      <div class="status-icon"><%= state[:icon] %></div>
+      <div>
+        <strong><%= state[:title] %></strong>
+        <% if setting.last_checked_at %>
+          <span class="meta">Checked <%= time_ago_in_words(setting.last_checked_at) %> ago</span>
+        <% end %>
+      </div>
+    </div>
+    <% if state[:message].present? %><p class="meta"><%= state[:message] %></p><% end %>
+
+    <dl class="kv">
+      <dt>Auth</dt><dd>Client credentials</dd>
+      <dt>API</dt><dd><%= Shopify::GraphqlClient::API_VERSION %></dd>
+    </dl>
+  </div>
+  <% if setting.configured? %>
+    <div class="card-foot">
+      <%= button_to "Test connection", test_connection_settings_path, method: :post,
+            class: "btn btn-secondary", form: { data: { turbo_submits_with: "Testing…" } } %>
+    </div>
+  <% end %>
+</aside>

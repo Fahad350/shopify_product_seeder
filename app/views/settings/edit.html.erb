@@ -1,83 +1,9 @@
 <% content_for :title, "Settings · Product Seeder" %>
 
-<div class="page-head">
-  <div>
-    <h1>Settings</h1>
-    <p>Connect your Shopify development store using the custom app's client credentials.</p>
-  </div>
-</div>
+<%= render "shared/page_header", title: "Settings",
+      subtitle: "Connect your Shopify development store using the custom app's client credentials." %>
 
 <div class="grid-2">
-  <section class="card">
-    <%= form_with model: @setting, url: settings_path, method: :patch do |f| %>
-      <div class="card-head"><h2>Store credentials</h2></div>
-      <div class="card-body">
-        <% if @setting.errors.any? %>
-          <div class="flash flash-alert">
-            <ul>
-              <% @setting.errors.full_messages.each do |msg| %>
-                <li><%= msg %></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
-
-        <div class="field">
-          <%= f.label :shop_domain, "Shop domain" %>
-          <%= f.text_field :shop_domain, placeholder: "your-store.myshopify.com", autocomplete: "off", spellcheck: false %>
-          <div class="hint">The store's .myshopify.com domain.</div>
-        </div>
-
-        <div class="field">
-          <%= f.label :client_id, "Client ID" %>
-          <%= f.text_field :client_id, autocomplete: "off", spellcheck: false %>
-        </div>
-
-        <div class="field">
-          <%= f.label :client_secret, "Client secret" %>
-          <%# The stored secret is never rendered back into the page. %>
-          <%= f.password_field :client_secret, value: nil, autocomplete: "new-password",
-                placeholder: (@setting.persisted? ? "••••••••••••" : "") %>
-          <div class="hint">
-            <%= @setting.persisted? ? "Stored encrypted. Leave blank to keep the current secret." : "Stored encrypted at rest." %>
-          </div>
-        </div>
-      </div>
-      <div class="card-foot">
-        <%= f.submit "Save Settings", class: "btn", data: { turbo_submits_with: "Saving…" } %>
-      </div>
-    <% end %>
-  </section>
-
-  <aside class="card">
-    <div class="card-head"><h2>Connection</h2></div>
-    <div class="card-body">
-      <% state = if !@setting.persisted? then ["status-none", "–", "Not configured", "Save your credentials to connect."]
-                 elsif @setting.connected? then ["status-ok", "✓", "Connected", @setting.connection_message]
-                 elsif @setting.connection_status == "failed" then ["status-err", "!", "Connection failed", @setting.connection_message]
-                 else ["status-none", "?", "Not checked", "Test the connection to verify your credentials."]
-                 end %>
-      <div class="status <%= state[0] %>">
-        <div class="status-icon"><%= state[1] %></div>
-        <div>
-          <strong><%= state[2] %></strong>
-          <% if @setting.last_checked_at %>
-            <span class="meta">Checked <%= time_ago_in_words(@setting.last_checked_at) %> ago</span>
-          <% end %>
-        </div>
-      </div>
-      <% if state[3].present? %><p class="meta"><%= state[3] %></p><% end %>
-
-      <dl class="kv">
-        <dt>Auth</dt><dd>Client credentials</dd>
-        <dt>API</dt><dd><%= Shopify::GraphqlClient::API_VERSION %></dd>
-      </dl>
-    </div>
-    <% if @setting.configured? %>
-      <div class="card-foot">
-        <%= button_to "Test connection", test_connection_settings_path, method: :post,
-              class: "btn btn-secondary", form: { data: { turbo_submits_with: "Testing…" } } %>
-      </div>
-    <% end %>
-  </aside>
+  <%= render "credentials_form", setting: @setting %>
+  <%= render "connection_card", setting: @setting %>
 </div>

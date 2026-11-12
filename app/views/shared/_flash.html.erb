@@ -1,0 +1,7 @@
+<% flash.each do |type, msg| %>
+  <div class="flash flash-<%= type %>" role="status"
+       data-controller="flash" data-flash-delay-value="<%= type == "alert" ? 8000 : 5000 %>">
+    <span><%= msg %></span>
+    <button type="button" class="flash-close" aria-label="Dismiss" data-action="flash#dismiss">&times;</button>
+  </div>
+<% end %>

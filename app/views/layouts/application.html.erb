@@ -20,34 +20,15 @@
   </head>
 
   <body>
-    <% setting = ShopSetting.current %>
-    <header class="topbar">
-      <div class="topbar-inner">
-        <%= link_to root_path, class: "brand" do %>
-          <span class="brand-mark">S</span> Product Seeder
-        <% end %>
-        <nav class="tabs">
-          <%= link_to "Dashboard", product_seeds_path, class: ["tab", ("active" if controller_name == "product_seeds")] %>
-          <%= link_to "Settings", edit_settings_path, class: ["tab", ("active" if controller_name == "settings")] %>
-        </nav>
-        <% if setting.persisted? %>
-          <span class="store-pill" title="<%= setting.connected? ? "Connected" : "Not connected" %>">
-            <span class="dot <%= setting.connected? ? "dot-ok" : (setting.connection_status == "failed" ? "dot-err" : "") %>"></span>
-            <%= setting.shop_domain %>
-          </span>
-        <% end %>
-      </div>
-    </header>
+    <div class="app">
+      <%= render "layouts/sidebar", setting: ShopSetting.current %>
 
-    <main>
-      <% flash.each do |type, msg| %>
-        <div class="flash flash-<%= type %>" role="status"
-             data-controller="flash" data-flash-delay-value="<%= type == "alert" ? 8000 : 5000 %>">
-          <span><%= msg %></span>
-          <button type="button" class="flash-close" aria-label="Dismiss" data-action="flash#dismiss">&times;</button>
+      <main class="content">
+        <div class="content-inner">
+          <%= render "shared/flash" %>
+          <%= yield %>
         </div>
-      <% end %>
-      <%= yield %>
-    </main>
+      </main>
+    </div>
   </body>
 </html>

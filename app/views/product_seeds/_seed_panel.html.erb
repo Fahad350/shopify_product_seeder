@@ -1,0 +1,23 @@
+<section class="card">
+  <div class="card-body hero">
+    <div>
+      <h2>Seed store</h2>
+      <p>
+        Fetches 3 products from DummyJSON and creates them in
+        <strong><%= setting.shop_domain.presence || "your store" %></strong>.
+        Products already imported are detected and skipped.
+      </p>
+      <ul class="checklist">
+        <li>2 variants each</li>
+        <li>Product image</li>
+        <li>No duplicates</li>
+      </ul>
+    </div>
+    <% if setting.configured? %>
+      <%= button_to "Seed Store", product_seeds_path, method: :post, class: "btn btn-lg",
+            form: { data: { turbo_submits_with: "Seeding…" } } %>
+    <% else %>
+      <%= link_to "Configure settings", edit_settings_path, class: "btn btn-lg btn-secondary" %>
+    <% end %>
+  </div>
+</section>

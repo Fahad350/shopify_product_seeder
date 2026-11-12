@@ -1,0 +1,28 @@
+<aside class="sidebar">
+  <%= link_to root_path, class: "sidebar-brand" do %>
+    <span class="logo"><%= icon(:box, size: 20) %></span>
+    <span>
+      <span class="brand-name">Product Seeder</span>
+      <span class="brand-sub">Shopify · DummyJSON</span>
+    </span>
+  <% end %>
+
+  <nav class="sidebar-nav" aria-label="Main">
+    <span class="nav-label">Menu</span>
+    <%= nav_link "Dashboard", product_seeds_path, :dashboard, active: controller_name == "product_seeds" %>
+    <%= nav_link "Settings", edit_settings_path, :settings, active: controller_name == "settings" %>
+  </nav>
+
+  <% if setting.persisted? %>
+    <div class="sidebar-store" title="<%= setting.shop_domain %> (<%= setting.connected? ? "Connected" : "Not connected" %>)">
+      <span class="store-icon"><%= icon(:store, size: 16) %></span>
+      <span class="store-text">
+        <span class="store-domain"><%= setting.shop_domain %></span>
+        <span class="store-state">
+          <span class="dot <%= connection_dot_class(setting) %>"></span>
+          <%= setting.connected? ? "Connected" : "Not connected" %>
+        </span>
+      </span>
+    </div>
+  <% end %>
+</aside>
