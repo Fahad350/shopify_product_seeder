@@ -1,62 +1,103 @@
-<% content_for :title, "Seeder · Shopify Product Seeder" %>
+<% content_for :title, "Dashboard · Product Seeder" %>
 
-<h1>Product seeder</h1>
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Import products from DummyJSON into your Shopify store.</p>
+  </div>
+</div>
 
 <section class="card">
-  <p class="muted">
-    Imports 3 products from DummyJSON into
-    <strong><%= @setting.shop_domain.presence || "your store" %></strong>,
-    each with 2 variants and an image. Products already imported are skipped.
-  </p>
-  <%= button_to "Seed Store", product_seeds_path, method: :post, class: "btn",
-        disabled: !@setting.configured?,
-        form: { data: { turbo_submits_with: "Seeding… please wait" } } %>
-  <% unless @setting.configured? %>
-    <p class="muted"><%= link_to "Configure your Shopify settings", edit_settings_path %> first.</p>
-  <% end %>
+  <div class="card-body hero">
+    <div>
+      <h2>Seed store</h2>
+      <p>
+        Fetches 3 products from DummyJSON and creates them in
+        <strong><%= @setting.shop_domain.presence || "your store" %></strong>.
+        Products already imported are detected and skipped.
+      </p>
+      <ul class="checklist">
+        <li>2 variants each</li>
+        <li>Product image</li>
+        <li>No duplicates</li>
+      </ul>
+    </div>
+    <% if @setting.configured? %>
+      <%= button_to "Seed Store", product_seeds_path, method: :post, class: "btn btn-lg",
+            form: { data: { turbo_submits_with: "Seeding…" } } %>
+    <% else %>
+      <%= link_to "Configure settings", edit_settings_path, class: "btn btn-lg btn-secondary" %>
+    <% end %>
+  </div>
 </section>
 
 <% if @run %>
-  <section class="card">
-    <h2>Last run
-      <span class="badge <%= { "completed" => "badge-ok", "failed" => "badge-error", "completed_with_errors" => "badge-error" }.fetch(@run.status, "badge-muted") %>">
-        <%= @run.status.humanize %>
-      </span>
-    </h2>
-    <p class="muted"><%= l(@run.created_at, format: :long) %></p>
+  <div class="stats">
+    <% { created: "Created", updated: "Updated", skipped: "Skipped", failed: "Failed" }.each do |key, label| %>
+      <div class="stat stat-<%= key %>">
+        <span class="stat-label"><%= label %></span>
+        <span class="stat-num"><%= @run.public_send("#{key}_count") %></span>
+      </div>
+    <% end %>
+  </div>
 
-    <div class="stats">
-      <div class="stat"><span class="stat-num"><%= @run.created_count %></span>Created</div>
-      <div class="stat"><span class="stat-num"><%= @run.updated_count %></span>Updated</div>
-      <div class="stat"><span class="stat-num"><%= @run.skipped_count %></span>Skipped</div>
-      <div class="stat"><span class="stat-num stat-fail"><%= @run.failed_count %></span>Failed</div>
+  <section class="card">
+    <div class="card-head">
+      <h2>Last run</h2>
+      <div>
+        <span class="meta"><%= time_ago_in_words(@run.created_at) %> ago</span>
+        <span class="badge <%= { "completed" => "badge-ok", "completed_with_errors" => "badge-warn", "failed" => "badge-error" }.fetch(@run.status, "badge-muted") %>">
+          <%= @run.status.humanize %>
+        </span>
+      </div>
     </div>
 
     <% if @run.error_message.present? %>
-      <div class="flash flash-alert"><%= @run.error_message %></div>
+      <div class="card-body"><div class="flash flash-alert" style="margin:0"><%= @run.error_message %></div></div>
     <% end %>
 
     <% if @run.results.any? %>
-      <table class="results">
-        <thead><tr><th>DummyJSON ID</th><th>Product</th><th>Result</th><th>Details</th></tr></thead>
-        <tbody>
-          <% @run.results.each do |r| %>
-            <tr>
-              <td><%= r["source_id"] %></td>
-              <td><%= r["title"] %></td>
-              <td><span class="badge outcome-<%= r["outcome"] %>"><%= r["outcome"].humanize %></span></td>
-              <td>
-                <% if r["shopify_id"].present? %>
-                  <%= link_to "View in Shopify", "https://#{@setting.shop_domain}/admin/products/#{r['shopify_id'].split('/').last}", target: "_blank", rel: "noopener" %>
-                <% end %>
-                <% Array(r["messages"]).each do |m| %>
-                  <div class="<%= r["outcome"] == "failed" ? "error-text" : "muted" %>"><%= m %></div>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr><th>Product</th><th>DummyJSON ID</th><th>Result</th><th>Details</th></tr>
+          </thead>
+          <tbody>
+            <% @run.results.each do |r| %>
+              <tr>
+                <td>
+                  <div class="product">
+                    <% if r["image_url"].present? %>
+                      <img class="thumb" src="<%= r["image_url"] %>" alt="" loading="lazy" onerror="this.removeAttribute('src')">
+                    <% else %>
+                      <span class="thumb"></span>
+                    <% end %>
+                    <span class="product-title"><%= r["title"] %></span>
+                  </div>
+                </td>
+                <td class="mono">#<%= r["source_id"] %></td>
+                <td><span class="badge outcome-<%= r["outcome"] %>"><%= r["outcome"].humanize %></span></td>
+                <td>
+                  <% Array(r["messages"]).each do |m| %>
+                    <div class="msg <%= "msg-error" if r["outcome"] == "failed" %>"><%= m %></div>
+                  <% end %>
+                  <% if r["shopify_id"].present? %>
+                    <%= link_to "View in Shopify ↗", "https://admin.shopify.com/store/#{@setting.shop_domain.delete_suffix('.myshopify.com')}/products/#{r['shopify_id'].split('/').last}",
+                          target: "_blank", rel: "noopener", class: "shopify-link" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     <% end %>
+  </section>
+<% else %>
+  <section class="card">
+    <div class="empty">
+      <strong>No imports yet</strong>
+      Click <em>Seed Store</em> to import your first products.
+    </div>
   </section>
 <% end %>

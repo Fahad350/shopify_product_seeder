@@ -11,26 +11,37 @@
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
-    <nav class="nav">
-      <%= link_to "Seeder", product_seeds_path, class: ("active" if controller_name == "product_seeds") %>
-      <%= link_to "Settings", edit_settings_path, class: ("active" if controller_name == "settings") %>
-    </nav>
+    <% setting = ShopSetting.current %>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <%= link_to root_path, class: "brand" do %>
+          <span class="brand-mark">S</span> Product Seeder
+        <% end %>
+        <nav class="tabs">
+          <%= link_to "Dashboard", product_seeds_path, class: ["tab", ("active" if controller_name == "product_seeds")] %>
+          <%= link_to "Settings", edit_settings_path, class: ["tab", ("active" if controller_name == "settings")] %>
+        </nav>
+        <% if setting.persisted? %>
+          <span class="store-pill" title="<%= setting.connected? ? "Connected" : "Not connected" %>">
+            <span class="dot <%= setting.connected? ? "dot-ok" : (setting.connection_status == "failed" ? "dot-err" : "") %>"></span>
+            <%= setting.shop_domain %>
+          </span>
+        <% end %>
+      </div>
+    </header>
+
     <main>
       <% flash.each do |type, msg| %>
-        <div class="flash flash-<%= type %>"><%= msg %></div>
+        <div class="flash flash-<%= type %>" role="status"><%= msg %></div>
       <% end %>
       <%= yield %>
     </main>

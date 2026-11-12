@@ -28,6 +28,7 @@ module Shopify
       id title handle
       variantsCount { count }
       media(first: 1) { nodes { id } }
+      featuredMedia { preview { image { url(transform: { maxWidth: 120, maxHeight: 120 }) } } }
     GQL
 
     FIND_QUERY = <<~GQL.freeze
@@ -87,11 +88,12 @@ module Shopify
     attr_reader :client
 
     def import(source)
-      base = { source_id: source["id"], title: source["title"], messages: [] }
+      base = { source_id: source["id"], title: source["title"], image_url: source["thumbnail"], messages: [] }
       existing = find_existing(source["id"])
 
       if existing && complete?(existing)
-        return base.merge(outcome: "skipped", shopify_id: existing["id"], messages: ["Already imported."])
+        return base.merge(outcome: "skipped", shopify_id: existing["id"], image_url: image_url(existing, source),
+                          messages: ["Already imported."])
       end
 
       payload = client.query(PRODUCT_SET, input: product_input(source), identifier: identifier(source["id"]))["productSet"]
@@ -100,7 +102,9 @@ module Shopify
         return base.merge(outcome: "failed", shopify_id: existing&.dig("id"), messages: errors.map { |e| format_user_error(e) })
       end
 
-      base.merge(outcome: existing ? "updated" : "created", shopify_id: payload.dig("product", "id"),
+      product = payload["product"]
+      base.merge(outcome: existing ? "updated" : "created", shopify_id: product&.dig("id"),
+                 image_url: image_url(product, source),
                  messages: existing ? ["Existing product was incomplete and has been repaired."] : [])
     rescue GraphqlClient::AuthenticationError
       raise # credentials problem: stop the whole run
@@ -110,6 +114,12 @@ module Shopify
 
     def find_existing(source_id)
       client.query(FIND_QUERY, identifier: identifier(source_id))["productByIdentifier"]
+    end
+
+    # Prefer the image as stored on Shopify's CDN; a freshly uploaded image may
+    # still be processing, so fall back to the DummyJSON source image.
+    def image_url(product, source)
+      product&.dig("featuredMedia", "preview", "image", "url").presence || source["thumbnail"]
     end
 
     def complete?(product)
