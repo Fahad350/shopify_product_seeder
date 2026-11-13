@@ -105,4 +105,22 @@ class ProductSeedsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.shopify-link", 2
     assert_select ".stat-created .stat-num", "3" # counts still match the run
   end
+
+  test "thumbnails still processing in Shopify show a spinner inside the auto-refresh frame" do
+    create_setting
+    stub_token("tok-1")
+    stub_dummyjson
+    shopify = FakeShopify.new
+    shopify.install(self)
+    Shopify::ProductImporter.call
+    shopify.products["1"]["featuredMedia"] = nil # image not processed yet
+
+    get product_seeds_path
+
+    assert_select "turbo-frame#last_run[data-controller='thumb-refresh']" do
+      assert_select ".thumb-pending", 1
+      assert_select "img.thumb", 2
+    end
+    assert_select "img.thumb[src*='dummyjson']", 0 # no blocked fallback while processing
+  end
 end

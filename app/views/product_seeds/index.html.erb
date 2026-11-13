@@ -10,7 +10,10 @@
     <% end %>
   </div>
 
-  <%= render "last_run", run: @run, setting: @setting, live_products: @live_products %>
+  <%# Only this frame reloads while new product images are still processing in Shopify. %>
+  <%= turbo_frame_tag "last_run", data: { controller: "thumb-refresh", thumb_refresh_url_value: product_seeds_path } do %>
+    <%= render "last_run", run: @run, setting: @setting, live_products: @live_products %>
+  <% end %>
 <% else %>
   <section class="card">
     <div class="empty">

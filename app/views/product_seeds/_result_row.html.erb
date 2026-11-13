@@ -1,12 +1,16 @@
-<%# live_products is nil when Shopify could not be checked: then nothing is marked deleted. %>
+<%# live_products is nil when Shopify could not be checked: then nothing is marked deleted or pending. %>
 <% shopify_id = result["shopify_id"] %>
-<% deleted = live_products && shopify_id.present? && !live_products.key?(shopify_id) %>
-<% image_url = deleted ? nil : (live_products&.dig(shopify_id).presence || result["image_url"]) %>
+<% exists = live_products && shopify_id.present? && live_products.key?(shopify_id) %>
+<% deleted = live_products && shopify_id.present? && !exists %>
+<% pending = exists && live_products[shopify_id].blank? # image still processing in Shopify %>
+<% image_url = (deleted || pending) ? nil : (live_products&.dig(shopify_id).presence || result["image_url"]) %>
 <tr class="<%= "row-deleted" if deleted %>">
   <td>
     <div class="product">
       <% if image_url.present? %>
         <img class="thumb" src="<%= image_url %>" alt="" loading="lazy" onerror="this.removeAttribute('src')">
+      <% elsif pending %>
+        <span class="thumb thumb-pending" title="Image processing in Shopify"></span>
       <% else %>
         <span class="thumb"></span>
       <% end %>
