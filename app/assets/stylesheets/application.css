@@ -314,3 +314,12 @@ dl.kv.kv-flush { margin: 0; padding: 0; border: 0; }
 .description p:first-child { margin-top: 0; }
 .description p:last-child { margin-bottom: 0; }
 @media (max-width: 960px) { .grid-detail { grid-template-columns: 1fr; } }
+
+/* Products deleted in Shopify since the last run */
+.results tr.row-deleted .product,
+.results tr.row-deleted .mono,
+.results tr.row-deleted .outcome-created,
+.results tr.row-deleted .outcome-updated,
+.results tr.row-deleted .outcome-skipped { opacity: .5; }
+.results tr.row-deleted .product-title { text-decoration: line-through; text-decoration-color: var(--border-strong); }
+.deleted-note { margin-bottom: 4px; }

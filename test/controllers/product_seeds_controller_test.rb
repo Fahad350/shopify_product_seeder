@@ -83,5 +83,26 @@ class ProductSeedsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "table.results tbody tr", 3
+    assert_select "tr.row-deleted", 0 # can't check Shopify, so nothing is marked deleted
+    assert_select "a.shopify-link", 3
+  end
+
+  test "products deleted in Shopify are marked in the last run, without a broken link" do
+    create_setting
+    stub_token("tok-1")
+    stub_dummyjson
+    shopify = FakeShopify.new
+    shopify.install(self)
+    Shopify::ProductImporter.call
+    shopify.products.delete("2") # deleted in the Shopify admin after the run
+
+    get product_seeds_path
+
+    assert_select "table.results tbody tr", 3 # history is kept
+    assert_select "tr.row-deleted", 1
+    assert_select "tr.row-deleted .deleted-note", "Deleted in Shopify"
+    assert_select "tr.row-deleted a.shopify-link", 0
+    assert_select "a.shopify-link", 2
+    assert_select ".stat-created .stat-num", "3" # counts still match the run
   end
 end

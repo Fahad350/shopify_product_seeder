@@ -2,7 +2,7 @@ class ProductSeedsController < ApplicationController
   def index
     @setting = ShopSetting.current
     @run = SeedRun.recent.first
-    @live_images = @run && @setting.configured? ? live_images : {}
+    @live_products = live_products if @run && @setting.configured?
   end
 
   def create
@@ -24,14 +24,13 @@ class ProductSeedsController < ApplicationController
 
   private
 
-  # Current Shopify image per product ({ product_gid => url }). A freshly created
-  # product's image is still processing when the seed finishes, so the stored URL
-  # is only a fallback. Thumbnails are optional: on any Shopify error, use none.
-  def live_images
-    Shopify::ProductCatalog.new.all
-      .to_h { |p| [ p["id"], p.dig("featuredMedia", "preview", "image", "url") ] }
-      .compact
+  # Seeded products that currently exist in Shopify: { product_gid => image_url or nil }.
+  # Used to show the current image (a new product's image is still processing when
+  # the seed finishes) and to mark products deleted in Shopify since the run.
+  # Returns nil if Shopify can't be reached, so nothing is wrongly marked deleted.
+  def live_products
+    Shopify::ProductCatalog.new.all.to_h { |p| [ p["id"], p.dig("featuredMedia", "preview", "image", "url") ] }
   rescue Shopify::GraphqlClient::Error
-    {}
+    nil
   end
 end

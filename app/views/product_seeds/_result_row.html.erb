@@ -1,5 +1,8 @@
-<% image_url = live_images[result["shopify_id"]].presence || result["image_url"] %>
-<tr>
+<%# live_products is nil when Shopify could not be checked: then nothing is marked deleted. %>
+<% shopify_id = result["shopify_id"] %>
+<% deleted = live_products && shopify_id.present? && !live_products.key?(shopify_id) %>
+<% image_url = deleted ? nil : (live_products&.dig(shopify_id).presence || result["image_url"]) %>
+<tr class="<%= "row-deleted" if deleted %>">
   <td>
     <div class="product">
       <% if image_url.present? %>
@@ -13,12 +16,17 @@
   <td class="mono">#<%= result["source_id"] %></td>
   <td><span class="badge outcome-<%= result["outcome"] %>"><%= result["outcome"].humanize %></span></td>
   <td>
-    <% Array(result["messages"]).each do |m| %>
-      <div class="msg <%= "msg-error" if result["outcome"] == "failed" %>"><%= m %></div>
-    <% end %>
-    <% if result["shopify_id"].present? %>
-      <%= link_to "View in Shopify ↗", shopify_admin_product_url(setting, result["shopify_id"]),
-            target: "_blank", rel: "noopener", class: "shopify-link" %>
+    <% if deleted %>
+      <span class="badge badge-muted deleted-note">Deleted in Shopify</span>
+      <div class="msg">Seed again to re-create it.</div>
+    <% else %>
+      <% Array(result["messages"]).each do |m| %>
+        <div class="msg <%= "msg-error" if result["outcome"] == "failed" %>"><%= m %></div>
+      <% end %>
+      <% if shopify_id.present? %>
+        <%= link_to "View in Shopify ↗", shopify_admin_product_url(setting, shopify_id),
+              target: "_blank", rel: "noopener", class: "shopify-link" %>
+      <% end %>
     <% end %>
   </td>
 </tr>
