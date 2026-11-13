@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Builds a delivery ZIP from committed files only (git archive), so git-ignored
+# files such as .env, config/master.key, log/, tmp/ and storage/ can never be
+# included. Then scans the ZIP and refuses to finish if anything sensitive is inside.
+#
+# Usage: bin/package [output.zip]
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+name="$(basename "$PWD")"
+out="${1:-../${name}.zip}"
+
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Uncommitted changes: commit first. The package contains committed files only." >&2
+  exit 1
+fi
+
+rm -f "$out"
+git archive --format=zip --prefix="${name}/" -o "$out" HEAD
+
+# 1) Forbidden file names
+forbidden='(^|/)(\.env(\..*)?|master\.key|[^/]*\.key|[^/]*\.pem|[^/]*\.log)$|(^|/)(log|tmp|storage)/.+'
+# (Rails commits empty tmp/ and log/ folders with .keep placeholders; those are fine.)
+bad_files="$(unzip -Z1 "$out" | grep -E "$forbidden" | grep -v -E '(^|/)\.env\.example$|/\.keep$|/$' || true)"
+
+# 2) Secret-looking content (Shopify tokens/secrets, private keys)
+secret_hits="$(unzip -p "$out" | grep -a -c -E 'shp(at|ss|ca|pa)_[0-9a-fA-F]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----' || true)"
+
+if [[ -n "$bad_files" || "$secret_hits" != "0" ]]; then
+  rm -f "$out"
+  echo "REFUSED: the package would contain sensitive data." >&2
+  [[ -n "$bad_files" ]] && echo "Files:" >&2 && echo "$bad_files" >&2
+  [[ "$secret_hits" != "0" ]] && echo "Secret-looking strings found: $secret_hits" >&2
+  exit 1
+fi
+
+echo "OK: $out ($(unzip -Z1 "$out" | wc -l | tr -d ' ') files, from commit $(git rev-parse --short HEAD))"
+echo "Contains no .env, master.key, logs, tmp or storage."
