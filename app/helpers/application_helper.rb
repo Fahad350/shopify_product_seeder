@@ -58,7 +58,8 @@ module ApplicationHelper
 
   def product_thumb(product)
     url = product.dig("featuredMedia", "preview", "image", "url")
-    return tag.span(class: "thumb") if url.blank?
+    # No image yet = Shopify is still processing it: show a spinner (thumb-refresh reloads).
+    return tag.span(class: "thumb thumb-pending", title: "Image processing in Shopify") if url.blank?
 
     tag.img(class: "thumb", src: url, alt: "", loading: "lazy", onerror: "this.removeAttribute('src')")
   end

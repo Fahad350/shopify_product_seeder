@@ -4,16 +4,17 @@ module Shopify
   class ProductCatalog
     SEEDED_TAG = "seeded".freeze
 
+    # Fields shown in product lists (Products page, dashboard thumbnails).
+    LIST_FIELDS = <<~GQL.freeze
+      id title vendor productType status tags
+      variantsCount { count }
+      featuredMedia { preview { image { url(transform: { maxWidth: 120, maxHeight: 120 }) } } }
+      metafield(namespace: "#{ProductImporter::NAMESPACE}", key: "#{ProductImporter::KEY}") { value }
+    GQL
+
     LIST_QUERY = <<~GQL.freeze
       query SeededProducts($query: String!) {
-        products(first: 50, query: $query, sortKey: TITLE) {
-          nodes {
-            id title vendor productType status
-            variantsCount { count }
-            featuredMedia { preview { image { url(transform: { maxWidth: 120, maxHeight: 120 }) } } }
-            metafield(namespace: "#{ProductImporter::NAMESPACE}", key: "#{ProductImporter::KEY}") { value }
-          }
-        }
+        products(first: 50, query: $query, sortKey: TITLE) { nodes { #{LIST_FIELDS} } }
       }
     GQL
 
@@ -40,12 +41,7 @@ module Shopify
     # so products created moments ago are not yet returned by products(query:).
     NODES_QUERY = <<~GQL.freeze
       query SeededProductsById($ids: [ID!]!) {
-        nodes(ids: $ids) {
-          ... on Product {
-            id
-            featuredMedia { preview { image { url(transform: { maxWidth: 120, maxHeight: 120 }) } } }
-          }
-        }
+        nodes(ids: $ids) { ... on Product { #{LIST_FIELDS} } }
       }
     GQL
 
@@ -53,9 +49,14 @@ module Shopify
       @client = client
     end
 
-    # Array of product hashes.
-    def all
-      @client.query(LIST_QUERY, query: "tag:#{SEEDED_TAG}").dig("products", "nodes")
+    # Array of seeded product hashes, sorted by title. `also_ids` (e.g. the last seed
+    # run's products) are looked up by ID too, so products created moments ago appear
+    # even before Shopify's search index includes them.
+    def all(also_ids: [])
+      found = @client.query(LIST_QUERY, query: "tag:#{SEEDED_TAG}").dig("products", "nodes")
+      missing = also_ids - found.map { |p| p["id"] }
+      extra = find_by_ids(missing).values.select { |p| Array(p["tags"]).include?(SEEDED_TAG) }
+      (found + extra).sort_by { |p| p["title"].to_s.downcase }
     end
 
     # Products that still exist, by ID: { product_gid => product hash }. Deleted ones are

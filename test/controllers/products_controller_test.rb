@@ -70,4 +70,35 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to edit_settings_path
   end
+
+  test "products from the last seed appear before Shopify search indexes them" do
+    Shopify::ProductImporter.call
+    @shopify.search_lag = true
+
+    get products_path
+
+    assert_select "table.products-table tbody tr", 3
+  end
+
+  test "products list shows a spinner inside the auto-refresh frame while an image is processing" do
+    Shopify::ProductImporter.call
+    @shopify.products["2"]["featuredMedia"] = nil
+
+    get products_path
+
+    assert_select "turbo-frame#products_list[target='_top'][data-controller='thumb-refresh']" do
+      assert_select ".thumb-pending", 1
+      assert_select "img.thumb", 2
+    end
+  end
+
+  test "product page shows a spinner while its image is processing" do
+    Shopify::ProductImporter.call
+    @shopify.products["1"]["featuredMedia"] = nil
+    id = @shopify.products["1"]["id"].split("/").last
+
+    get product_path(id)
+
+    assert_select "turbo-frame#product_image[data-controller='thumb-refresh'] .thumb-pending", 1
+  end
 end

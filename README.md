@@ -166,7 +166,7 @@ bin/rails db:test:prepare
 bin/rails test
 ```
 
-65 tests run in about one second. **No network is used**: WebMock blocks all real HTTP, and
+69 tests run in about one second. **No network is used**: WebMock blocks all real HTTP, and
 `test/support/fake_shopify.rb` is a small in-memory fake of the GraphQL endpoint. The tests
 use their own encryption keys, so they **do not need `config/master.key`**.
 

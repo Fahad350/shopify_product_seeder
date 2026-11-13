@@ -30,13 +30,17 @@
   </section>
 
   <aside class="card">
-    <div class="product-image">
-      <% if (url = @product.dig("featuredMedia", "preview", "image", "url")) %>
-        <img src="<%= url %>" alt="<%= @product["title"] %>" onerror="this.removeAttribute('src')">
-      <% else %>
-        <span class="meta">No image</span>
-      <% end %>
-    </div>
+    <%# Reloads itself while the image is still processing in Shopify. %>
+    <%= turbo_frame_tag "product_image", target: "_top",
+          data: { controller: "thumb-refresh", thumb_refresh_url_value: product_path(product_numeric_id(@product)) } do %>
+      <div class="product-image">
+        <% if (url = @product.dig("featuredMedia", "preview", "image", "url")) %>
+          <img src="<%= url %>" alt="<%= @product["title"] %>" onerror="this.removeAttribute('src')">
+        <% else %>
+          <span class="thumb-pending image-pending" title="Image processing in Shopify"></span>
+        <% end %>
+      </div>
+    <% end %>
     <div class="card-body">
       <dl class="kv kv-flush">
         <dt>Vendor</dt><dd><%= @product["vendor"].presence || "–" %></dd>

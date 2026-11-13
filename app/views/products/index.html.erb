@@ -7,6 +7,9 @@
   <div class="flash flash-alert"><%= @error %></div>
 <% end %>
 
+<%# Reloads itself while images are still processing; links inside open as full pages (_top). %>
+<%= turbo_frame_tag "products_list", target: "_top",
+      data: { controller: "thumb-refresh", thumb_refresh_url_value: products_path } do %>
 <section class="card">
   <div class="card-head">
     <h2>Seeded products</h2>
@@ -31,3 +34,4 @@
     </div>
   <% end %>
 </section>
+<% end %>
