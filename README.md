@@ -9,6 +9,8 @@ Seeding is **idempotent**: running it again skips products that already exist.
 - **Settings page**: shop domain, client ID, client secret, connection status
 - **Dashboard**: Seed Store button, processing state, created / updated / skipped / failed
   counts, and per-product results including GraphQL error messages
+- **Products pages** (read-only): the seeded products read live from Shopify, and a detail
+  page per product showing its two variants with price and SKU
 
 ---
 
@@ -69,6 +71,8 @@ in the same organization as the app.
 2. Click **Seed Store** again.
    - Nothing is duplicated: **Skipped 3**.
 3. Each result row links to the product in the Shopify admin.
+4. Open **Products** to see the seeded products, then click one to see its **two variants**
+   (Standard and Premium) with price, SKU and image.
 
 ## How it works
 
@@ -78,6 +82,7 @@ ProductSeedsController ──► Shopify::ProductImporter
                               ├─ DummyJson::ProductFetcher   GET dummyjson.com/products?limit=3
                               └─ Shopify::GraphqlClient      POST /admin/api/2026-10/graphql.json
                                    └─ Shopify::TokenService  client-credentials token, Rails.cache
+ProductsController ──► Shopify::ProductCatalog (read-only) ──► Shopify::GraphqlClient
 ```
 
 | File | Responsibility |
@@ -88,6 +93,8 @@ ProductSeedsController ──► Shopify::ProductImporter
 | `app/services/dummy_json/product_fetcher.rb` | Fetches the 3 source products |
 | `app/services/shopify/product_importer.rb` | Idempotent import, per-product results, concurrency lock |
 | `app/models/seed_run.rb` | Stores each run's status, counts and results for the dashboard |
+| `app/services/shopify/product_catalog.rb` | Read-only: lists products tagged `seeded` and loads one product with its variants, live from Shopify |
+| `app/controllers/products_controller.rb` | Products list and product detail pages; only products seeded by this app can be opened |
 
 ### Product creation
 
@@ -126,7 +133,8 @@ starting in parallel. The unique metafield is a second safeguard on Shopify's si
   5 minutes before it expires. No token request is made per GraphQL call.
 - **HTTP 401** on a GraphQL request: the cached token is discarded, a new one is requested,
   and the request is **retried once**. A second 401 stops with a clear error.
-- An invalid client ID or secret shows "Shopify rejected the credentials" on both pages.
+- An invalid client ID or secret shows "Shopify rejected the credentials". On the Settings
+  page, saving shows "Settings saved, but the connection failed" with the reason.
 
 ## Security
 
@@ -144,7 +152,7 @@ bin/rails db:test:prepare
 bin/rails test
 ```
 
-48 tests run in about one second. **No network is used**: WebMock blocks all real HTTP, and
+59 tests run in about one second. **No network is used**: WebMock blocks all real HTTP, and
 `test/support/fake_shopify.rb` is a small in-memory fake of the GraphQL endpoint. The tests
 use their own encryption keys, so they **do not need `config/master.key`**.
 
@@ -155,8 +163,13 @@ use their own encryption keys, so they **do not need `config/master.key`**.
 | Importer | 3 created with 2 variants and an image; **second run skips all and writes nothing**; repair of partial imports; `userErrors` recorded and run continues; failed product recovered on next run; wrong metafield type; DummyJSON outage; **concurrent run blocked** |
 | Settings | secret encrypted in DB, never rendered, filtered from logs; Connected/Failed status; validation |
 | Dashboard | counts and results shown; `userErrors` shown in the UI |
+| Products pages | list of seeded products; detail page with both variants, prices and SKUs; unknown or non-seeded product; Shopify errors shown instead of crashing |
 
 Code quality: `bin/rubocop` (0 offenses) and `bin/brakeman` (0 warnings).
+
+**Continuous integration:** GitHub Actions (`.github/workflows/ci.yml`) runs Brakeman,
+bundler-audit, the JavaScript dependency audit, RuboCop and the full test suite on every push
+to `main` and on pull requests.
 
 ## Design decisions
 
@@ -168,6 +181,10 @@ Code quality: `bin/rubocop` (0 offenses) and `bin/brakeman` (0 warnings).
 - **Upsert by custom ID** instead of searching by title or handle. The ID never changes and
   Shopify enforces its uniqueness.
 - **Single store.** `ShopSetting` is one row, matching the brief (no multi-tenant support).
+- **Plain CSS and Rails partials for the UI.** No UI framework or CSS build step; views are
+  split into small partials (sidebar, stat card, result row, connection card, and so on).
+- **Products pages read live from Shopify.** They store nothing locally, so they always match
+  the store, and they are read-only because editing belongs in the Shopify admin.
 
 ## Configuration
 
