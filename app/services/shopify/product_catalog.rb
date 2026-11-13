@@ -36,6 +36,19 @@ module Shopify
       }
     GQL
 
+    # Lookup by ID, not search: Shopify's search index lags a few seconds behind,
+    # so products created moments ago are not yet returned by products(query:).
+    NODES_QUERY = <<~GQL.freeze
+      query SeededProductsById($ids: [ID!]!) {
+        nodes(ids: $ids) {
+          ... on Product {
+            id
+            featuredMedia { preview { image { url(transform: { maxWidth: 120, maxHeight: 120 }) } } }
+          }
+        }
+      }
+    GQL
+
     def initialize(client: GraphqlClient.new)
       @client = client
     end
@@ -43,6 +56,14 @@ module Shopify
     # Array of product hashes.
     def all
       @client.query(LIST_QUERY, query: "tag:#{SEEDED_TAG}").dig("products", "nodes")
+    end
+
+    # Products that still exist, by ID: { product_gid => product hash }. Deleted ones are
+    # absent. Immediate (no search-index delay), so it is safe right after a seed.
+    def find_by_ids(gids)
+      return {} if gids.empty?
+
+      Array(@client.query(NODES_QUERY, ids: gids)["nodes"]).compact.index_by { |p| p["id"] }
     end
 
     # Product hash, or nil when it does not exist or was not seeded by this app.

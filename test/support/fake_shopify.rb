@@ -5,7 +5,7 @@ class FakeShopify
   TAXONOMY_NAMES = { "gid://shopify/TaxonomyCategory/hb" => "Health & Beauty" }.freeze
 
   attr_reader :products, :product_set_calls
-  attr_accessor :definition_type, :user_errors_for
+  attr_accessor :definition_type, :user_errors_for, :search_lag
 
   def initialize
     @products = {}
@@ -41,8 +41,11 @@ class FakeShopify
       { "productByIdentifier" => @products[vars.dig("identifier", "customId", "value")] }
     when /productSet/
       product_set(vars)
+    when /query SeededProductsById/
+      { "nodes" => vars["ids"].map { |id| @products.values.find { |p| p["id"] == id } } }
     when /query SeededProducts/
-      { "products" => { "nodes" => @products.values } }
+      # search_lag: like Shopify's search index right after a create (not searchable yet)
+      { "products" => { "nodes" => search_lag ? [] : @products.values } }
     when /query SeededProduct\(/
       { "product" => @products.values.find { |p| p["id"] == vars["id"] } }
     else

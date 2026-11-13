@@ -135,4 +135,19 @@ class ProductSeedsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select "img.thumb[src*='dummyjson']", 0 # no blocked fallback while processing
   end
+
+  test "products created moments ago show right away, even before Shopify search indexes them" do
+    create_setting
+    stub_token("tok-1")
+    stub_dummyjson
+    shopify = FakeShopify.new
+    shopify.install(self)
+    shopify.search_lag = true
+
+    post product_seeds_path
+    follow_redirect!
+
+    assert_select "table.results tbody tr", 3
+    assert_select ".empty", 0
+  end
 end
