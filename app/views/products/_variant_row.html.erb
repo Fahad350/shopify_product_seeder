@@ -1,0 +1,6 @@
+<tr>
+  <td><span class="product-title"><%= variant["title"] %></span></td>
+  <td class="meta"><%= Array(variant["selectedOptions"]).map { |o| "#{o['name']}: #{o['value']}" }.join(", ") %></td>
+  <td><strong><%= number_to_currency(variant["price"]) %></strong></td>
+  <td class="mono"><%= variant["sku"].presence || "–" %></td>
+</tr>

@@ -1,0 +1,14 @@
+<tr>
+  <td>
+    <%= link_to product_path(product_numeric_id(product)), class: "product product-link" do %>
+      <%= product_thumb(product) %>
+      <span class="product-title"><%= product["title"] %></span>
+    <% end %>
+  </td>
+  <td class="mono">#<%= product.dig("metafield", "value") || "–" %></td>
+  <td><%= product["vendor"].presence || "–" %></td>
+  <td><%= product["productType"].presence || "–" %></td>
+  <td><span class="count-pill"><%= product.dig("variantsCount", "count") %></span></td>
+  <td><span class="badge <%= product_status_badge_class(product["status"]) %>"><%= product["status"].to_s.capitalize %></span></td>
+  <td><%= link_to "View variants →", product_path(product_numeric_id(product)), class: "row-link" %></td>
+</tr>

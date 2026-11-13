@@ -1,0 +1,56 @@
+<% content_for :title, "#{@product["title"]} · Product Seeder" %>
+
+<div class="page-head page-head-row">
+  <div>
+    <%= link_to "← Back to products", products_path, class: "back-link" %>
+    <h1><%= @product["title"] %></h1>
+    <p>
+      <span class="badge <%= product_status_badge_class(@product["status"]) %>"><%= @product["status"].to_s.capitalize %></span>
+      <span class="meta">DummyJSON ID #<%= @product.dig("metafield", "value") || "–" %></span>
+    </p>
+  </div>
+  <%= link_to "Open in Shopify ↗", shopify_admin_product_url(@setting, @product["id"]),
+        target: "_blank", rel: "noopener", class: "btn btn-secondary" %>
+</div>
+
+<div class="grid-2 grid-detail">
+  <section class="card">
+    <div class="card-head">
+      <h2>Variants</h2>
+      <span class="meta"><%= pluralize(@product.dig("variants", "nodes").size, "variant") %></span>
+    </div>
+    <div class="table-wrap">
+      <table class="results">
+        <thead><tr><th>Variant</th><th>Option</th><th>Price</th><th>SKU</th></tr></thead>
+        <tbody>
+          <%= render partial: "variant_row", collection: @product.dig("variants", "nodes"), as: :variant %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <aside class="card">
+    <div class="product-image">
+      <% if (url = @product.dig("featuredMedia", "preview", "image", "url")) %>
+        <img src="<%= url %>" alt="<%= @product["title"] %>" onerror="this.removeAttribute('src')">
+      <% else %>
+        <span class="meta">No image</span>
+      <% end %>
+    </div>
+    <div class="card-body">
+      <dl class="kv kv-flush">
+        <dt>Vendor</dt><dd><%= @product["vendor"].presence || "–" %></dd>
+        <dt>Type</dt><dd><%= @product["productType"].presence || "–" %></dd>
+        <dt>Tags</dt><dd><%= Array(@product["tags"]).join(", ").presence || "–" %></dd>
+        <dt>Created</dt><dd><%= l(Time.zone.parse(@product["createdAt"]), format: :long) %></dd>
+      </dl>
+    </div>
+  </aside>
+</div>
+
+<% if @product["descriptionHtml"].present? %>
+  <section class="card">
+    <div class="card-head"><h2>Description</h2></div>
+    <div class="card-body description"><%= sanitize @product["descriptionHtml"] %></div>
+  </section>
+<% end %>

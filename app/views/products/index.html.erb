@@ -1,0 +1,33 @@
+<% content_for :title, "Products · Product Seeder" %>
+
+<%= render "shared/page_header", title: "Products",
+      subtitle: "Products seeded into your Shopify store, read live from Shopify." %>
+
+<% if @error %>
+  <div class="flash flash-alert"><%= @error %></div>
+<% end %>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Seeded products</h2>
+    <span class="meta"><%= pluralize(@products.size, "product") %></span>
+  </div>
+
+  <% if @products.any? %>
+    <div class="table-wrap">
+      <table class="results products-table">
+        <thead>
+          <tr><th>Product</th><th>DummyJSON ID</th><th>Vendor</th><th>Type</th><th>Variants</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          <%= render partial: "product_row", collection: @products, as: :product %>
+        </tbody>
+      </table>
+    </div>
+  <% elsif !@error %>
+    <div class="empty">
+      <strong>No seeded products yet</strong>
+      Go to the <%= link_to "Dashboard", product_seeds_path %> and click <em>Seed Store</em>.
+    </div>
+  <% end %>
+</section>

@@ -1,5 +1,6 @@
 # Minimal in-memory stand-in for the Shopify Admin GraphQL endpoint, covering
-# only the operations ProductImporter uses. Products are keyed by DummyJSON ID.
+# only the operations ProductImporter and ProductCatalog use.
+# Products are keyed by DummyJSON ID.
 class FakeShopify
   attr_reader :products, :product_set_calls
   attr_accessor :definition_type, :user_errors_for
@@ -38,6 +39,10 @@ class FakeShopify
       { "productByIdentifier" => @products[vars.dig("identifier", "customId", "value")] }
     when /productSet/
       product_set(vars)
+    when /query SeededProducts/
+      { "products" => { "nodes" => @products.values } }
+    when /query SeededProduct\(/
+      { "product" => @products.values.find { |p| p["id"] == vars["id"] } }
     else
       raise "FakeShopify: unexpected query #{query[0, 80]}"
     end
@@ -55,7 +60,15 @@ class FakeShopify
       "title" => input["title"],
       "variantsCount" => { "count" => input["variants"].size },
       "media" => { "nodes" => input["files"].map.with_index { |_, i| { "id" => "gid://shopify/MediaImage/#{i}" } } },
-      "featuredMedia" => { "preview" => { "image" => { "url" => "https://cdn.shopify.com/fake/#{source_id}.webp" } } }
+      "featuredMedia" => { "preview" => { "image" => { "url" => "https://cdn.shopify.com/fake/#{source_id}.webp" } } },
+      "vendor" => input["vendor"], "productType" => input["productType"], "status" => input["status"],
+      "tags" => input["tags"], "descriptionHtml" => input["descriptionHtml"], "createdAt" => "2026-11-12T08:00:00Z",
+      "metafield" => { "value" => source_id },
+      "variants" => { "nodes" => input["variants"].map.with_index do |v, i|
+        { "id" => "gid://shopify/ProductVariant/#{@next_id}#{i}", "title" => v["optionValues"].first["name"],
+          "price" => v["price"], "sku" => v["sku"],
+          "selectedOptions" => v["optionValues"].map { |o| { "name" => o["optionName"], "value" => o["name"] } } }
+      end }
     )
     @products[source_id] = node
     { "productSet" => { "product" => node, "userErrors" => [] } }

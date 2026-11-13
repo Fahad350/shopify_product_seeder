@@ -10,6 +10,7 @@
   <nav class="sidebar-nav" aria-label="Main">
     <span class="nav-label">Menu</span>
     <%= nav_link "Dashboard", product_seeds_path, :dashboard, active: controller_name == "product_seeds" %>
+    <%= nav_link "Products", products_path, :tag, active: controller_name == "products" %>
     <%= nav_link "Settings", edit_settings_path, :settings, active: controller_name == "settings" %>
   </nav>
 
