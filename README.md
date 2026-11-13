@@ -106,9 +106,20 @@ which is Shopify's recommended way to create a product with its options, variant
 
 - option **Edition** with values **Standard** and **Premium**, giving exactly two variants
 - variant prices: Standard = DummyJSON price, Premium = price × 1.25
+- compare-at (original) price from `discountPercentage`: price ÷ (1 − discount), so Shopify
+  shows the variant as on sale
 - SKUs: `<DummyJSON SKU>-STD` and `<DummyJSON SKU>-PRM`
+- barcode: DummyJSON `meta.barcode` on the Standard variant, stored without a barcode type
+  (DummyJSON's codes are not valid EANs and fail Shopify's checksum)
+- weight: DummyJSON `weight` on both variants, stored in kilograms
 - image: the DummyJSON `thumbnail`, passed in `files`
-- vendor from `brand`, product type from `category`, tags `dummyjson` and `seeded`
+- vendor from `brand`, product type from `category`; tags `dummyjson` and `seeded` plus the
+  DummyJSON `tags`
+- Shopify **Category** (Standard Product Taxonomy) from `category` through a small verified map
+  (`beauty` → Health & Beauty); unmapped categories leave it empty rather than guess, because
+  Shopify's taxonomy search is fuzzy
+- not imported: `stock`, because Shopify inventory needs the `read_locations` and
+  `write_inventory` scopes, and this app uses only `read_products` and `write_products`
 
 ### Duplicate prevention (idempotency)
 
@@ -155,7 +166,7 @@ bin/rails db:test:prepare
 bin/rails test
 ```
 
-64 tests run in about one second. **No network is used**: WebMock blocks all real HTTP, and
+65 tests run in about one second. **No network is used**: WebMock blocks all real HTTP, and
 `test/support/fake_shopify.rb` is a small in-memory fake of the GraphQL endpoint. The tests
 use their own encryption keys, so they **do not need `config/master.key`**.
 

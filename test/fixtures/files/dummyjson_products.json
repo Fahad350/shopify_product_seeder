@@ -5,6 +5,7 @@
       "title": "Essence Mascara Lash Princess",
       "description": "The Essence Mascara Lash Princess is a popular mascara known for its volumizing and lengthening effects. Achieve dramatic lashes with this long-lasting and cruelty-free formula.",
       "price": 9.99,
+      "discountPercentage": 10.48,
       "sku": "BEA-ESS-ESS-001",
       "brand": "Essence",
       "category": "beauty",
@@ -12,6 +13,13 @@
         "beauty",
         "mascara"
       ],
+      "weight": 4,
+      "meta": {
+        "createdAt": "2025-10-09T14:47:01.588Z",
+        "updatedAt": "2026-05-23T11:27:41.868Z",
+        "barcode": "5784719087687",
+        "qrCode": "https://cdn.dummyjson.com/public/qr-code.png"
+      },
       "thumbnail": "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp",
       "images": [
         "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/1.webp"
@@ -22,6 +30,7 @@
       "title": "Eyeshadow Palette with Mirror",
       "description": "The Eyeshadow Palette with Mirror offers a versatile range of eyeshadow shades for creating stunning eye looks. With a built-in mirror, it's convenient for on-the-go makeup application.",
       "price": 19.99,
+      "discountPercentage": 18.19,
       "sku": "BEA-GLA-EYE-002",
       "brand": "Glamour Beauty",
       "category": "beauty",
@@ -29,6 +38,13 @@
         "beauty",
         "eyeshadow"
       ],
+      "weight": 9,
+      "meta": {
+        "createdAt": "2024-12-03T11:29:45.706Z",
+        "updatedAt": "2025-08-24T16:52:47.806Z",
+        "barcode": "9170275171413",
+        "qrCode": "https://cdn.dummyjson.com/public/qr-code.png"
+      },
       "thumbnail": "https://cdn.dummyjson.com/product-images/beauty/eyeshadow-palette-with-mirror/thumbnail.webp",
       "images": [
         "https://cdn.dummyjson.com/product-images/beauty/eyeshadow-palette-with-mirror/1.webp"
@@ -39,6 +55,7 @@
       "title": "Powder Canister",
       "description": "The Powder Canister is a finely milled setting powder designed to set makeup and control shine. With a lightweight and translucent formula, it provides a smooth and matte finish.",
       "price": 14.99,
+      "discountPercentage": 9.84,
       "sku": "BEA-VEL-POW-003",
       "brand": "Velvet Touch",
       "category": "beauty",
@@ -46,6 +63,13 @@
         "beauty",
         "face powder"
       ],
+      "weight": 8,
+      "meta": {
+        "createdAt": "2025-01-08T18:30:12.844Z",
+        "updatedAt": "2025-11-26T14:49:26.980Z",
+        "barcode": "8418883906837",
+        "qrCode": "https://cdn.dummyjson.com/public/qr-code.png"
+      },
       "thumbnail": "https://cdn.dummyjson.com/product-images/beauty/powder-canister/thumbnail.webp",
       "images": [
         "https://cdn.dummyjson.com/product-images/beauty/powder-canister/1.webp"

@@ -2,6 +2,8 @@
 # only the operations ProductImporter and ProductCatalog use.
 # Products are keyed by DummyJSON ID.
 class FakeShopify
+  TAXONOMY_NAMES = { "gid://shopify/TaxonomyCategory/hb" => "Health & Beauty" }.freeze
+
   attr_reader :products, :product_set_calls
   attr_accessor :definition_type, :user_errors_for
 
@@ -62,11 +64,14 @@ class FakeShopify
       "media" => { "nodes" => input["files"].map.with_index { |_, i| { "id" => "gid://shopify/MediaImage/#{i}" } } },
       "featuredMedia" => { "preview" => { "image" => { "url" => "https://cdn.shopify.com/fake/#{source_id}.webp" } } },
       "vendor" => input["vendor"], "productType" => input["productType"], "status" => input["status"],
+      "category" => input["category"] && { "fullName" => TAXONOMY_NAMES.fetch(input["category"], "Unknown") },
       "tags" => input["tags"], "descriptionHtml" => input["descriptionHtml"], "createdAt" => "2026-11-12T08:00:00Z",
       "metafield" => { "value" => source_id },
       "variants" => { "nodes" => input["variants"].map.with_index do |v, i|
         { "id" => "gid://shopify/ProductVariant/#{@next_id}#{i}", "title" => v["optionValues"].first["name"],
-          "price" => v["price"], "sku" => v["sku"],
+          "price" => v["price"], "sku" => v["sku"], "compareAtPrice" => v["compareAtPrice"],
+          "barcodes" => { "nodes" => Array(v["barcodes"]).map { |b| { "value" => b["value"] } } },
+          "inventoryItem" => { "measurement" => { "weight" => v.dig("inventoryItem", "measurement", "weight") } },
           "selectedOptions" => v["optionValues"].map { |o| { "name" => o["optionName"], "value" => o["name"] } } }
       end }
     )

@@ -19,10 +19,20 @@ module Shopify
     NAMESPACE = "seeder".freeze
     KEY = "dummyjson_id".freeze
     LOCK_ID = 20_261_110 # arbitrary, app-wide
+    # Standard is the DummyJSON product as-is, so it also carries the source barcode.
     VARIANTS = [
-      { name: "Standard", price_factor: 1.0, sku_suffix: "STD" },
-      { name: "Premium", price_factor: 1.25, sku_suffix: "PRM" }
+      { name: "Standard", price_factor: 1.0, sku_suffix: "STD", source_barcode: true },
+      { name: "Premium", price_factor: 1.25, sku_suffix: "PRM", source_barcode: false }
     ].freeze
+    # DummyJSON gives weight as a bare number; it is stored as kilograms.
+    WEIGHT_UNIT = "KILOGRAMS".freeze
+    # DummyJSON category -> Shopify Standard Product Taxonomy category (the admin's
+    # "Category" field). Fixed, verified IDs: Shopify's taxonomy search is fuzzy
+    # ("Groceries" returns "Growlers"), so unmapped categories are left empty.
+    TAXONOMY_CATEGORIES = {
+      "beauty" => "gid://shopify/TaxonomyCategory/hb", # Health & Beauty
+      "furniture" => "gid://shopify/TaxonomyCategory/fr" # Furniture
+    }.freeze
 
     # Product fields read after a lookup or write: used for the completeness
     # check (2 variants + an image) and the dashboard thumbnail.
@@ -137,28 +147,45 @@ module Shopify
     end
 
     def product_input(source)
-      base_price = source["price"].to_d
-      base_sku = source["sku"].presence || "DJ-#{source['id']}"
-
       {
         title: source["title"],
         descriptionHtml: ERB::Util.html_escape(source["description"].to_s),
         vendor: source["brand"].presence || "DummyJSON",
         productType: source["category"].to_s.titleize,
+        category: TAXONOMY_CATEGORIES[source["category"].to_s],
         status: "ACTIVE",
         # Our tags first ("seeded" is how the Products pages find these products), then DummyJSON's.
         tags: ([ "dummyjson", ProductCatalog::SEEDED_TAG ] + Array(source["tags"]).map(&:to_s)).compact_blank.uniq,
         productOptions: [ { name: "Edition", values: VARIANTS.map { |v| { name: v[:name] } } } ],
-        variants: VARIANTS.map do |v|
-          {
-            optionValues: [ { optionName: "Edition", name: v[:name] } ],
-            price: (base_price * v[:price_factor]).round(2).to_s("F"),
-            sku: "#{base_sku}-#{v[:sku_suffix]}"
-          }
-        end,
+        variants: VARIANTS.map { |v| variant_input(source, v) },
         files: [ { originalSource: source["thumbnail"], contentType: "IMAGE", alt: source["title"] } ]
         # The DummyJSON ID metafield is written by productSet from the customId identifier.
-      }
+      }.compact # drop nil fields (e.g. an unmapped category) instead of sending null
+    end
+
+    def variant_input(source, variant)
+      price = (source["price"].to_d * variant[:price_factor]).round(2)
+      barcode = source.dig("meta", "barcode").presence if variant[:source_barcode]
+      weight = source["weight"].presence&.to_d
+
+      {
+        optionValues: [ { optionName: "Edition", name: variant[:name] } ],
+        price: price.to_s("F"),
+        compareAtPrice: compare_at_price(price, source["discountPercentage"]),
+        sku: "#{source['sku'].presence || "DJ-#{source['id']}"}-#{variant[:sku_suffix]}",
+        # No barcode type: DummyJSON's codes are not real EANs (they fail Shopify's checksum).
+        barcodes: barcode ? [ { value: barcode.to_s } ] : nil,
+        inventoryItem: weight&.positive? ? { measurement: { weight: { value: weight.to_f, unit: WEIGHT_UNIT } } } : nil
+      }.compact
+    end
+
+    # DummyJSON's price is already discounted by discountPercentage, so the original
+    # ("compare at") price is price / (1 - discount). Nil when there is no discount.
+    def compare_at_price(price, discount_percentage)
+      discount = discount_percentage.to_d
+      return unless discount.positive? && discount < 100
+
+      (price / (1 - discount / 100)).round(2).to_s("F")
     end
 
     def ensure_metafield_definition!

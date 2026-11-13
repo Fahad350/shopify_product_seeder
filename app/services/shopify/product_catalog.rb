@@ -21,9 +21,17 @@ module Shopify
       query SeededProduct($id: ID!) {
         product(id: $id) {
           id title descriptionHtml vendor productType status tags createdAt updatedAt
+          category { fullName }
           featuredMedia { preview { image { url(transform: { maxWidth: 600, maxHeight: 600 }) altText } } }
           metafield(namespace: "#{ProductImporter::NAMESPACE}", key: "#{ProductImporter::KEY}") { value }
-          variants(first: 10) { nodes { id title price sku selectedOptions { name value } } }
+          variants(first: 10) {
+            nodes {
+              id title price compareAtPrice sku
+              selectedOptions { name value }
+              barcodes(first: 1) { nodes { value } }
+              inventoryItem { measurement { weight { value unit } } }
+            }
+          }
         }
       }
     GQL

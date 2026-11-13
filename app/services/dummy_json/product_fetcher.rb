@@ -6,7 +6,7 @@ module DummyJson
     class Error < StandardError; end
 
     BASE_URL = "https://dummyjson.com/products".freeze
-    FIELDS = %w[id title description price sku brand category tags thumbnail images].freeze
+    FIELDS = %w[id title description price discountPercentage sku brand category tags weight meta thumbnail images].freeze
     TIMEOUT = 10
 
     def initialize(limit: 3)

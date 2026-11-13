@@ -39,6 +39,10 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td.mono", "BEA-ESS-ESS-001-STD"
     assert_select "td.mono", "BEA-ESS-ESS-001-PRM"
     assert_match "$12.49", response.body
+    assert_select "s.compare-at", "$11.16"      # compare-at (original) price
+    assert_select "td.mono", "5784719087687"    # barcode on the Standard variant
+    assert_match "4 kg", response.body           # weight
+    assert_select "dd", "Health & Beauty"       # Shopify taxonomy category
   end
 
   test "unknown product redirects with a message" do

@@ -35,7 +35,12 @@ class Shopify::ProductImporterTest < ActiveSupport::TestCase
         input["variants"].map { |v| v["price"] } == %w[9.99 12.49] &&
         input["variants"].map { |v| v["sku"] } == %w[BEA-ESS-ESS-001-STD BEA-ESS-ESS-001-PRM] &&
         input["files"].first["originalSource"].end_with?("thumbnail.webp") &&
-        input["tags"] == %w[dummyjson seeded beauty mascara]
+        input["tags"] == %w[dummyjson seeded beauty mascara] &&
+        input["productType"] == "Beauty" &&
+        input["category"] == "gid://shopify/TaxonomyCategory/hb" &&
+        input["variants"].map { |v| v["compareAtPrice"] } == %w[11.16 13.95] &&
+        input["variants"].map { |v| v["barcodes"] } == [ [ { "value" => "5784719087687" } ], nil ] &&
+        input["variants"].all? { |v| v.dig("inventoryItem", "measurement", "weight") == { "value" => 4.0, "unit" => "KILOGRAMS" } }
     end
   end
 
@@ -131,5 +136,13 @@ class Shopify::ProductImporterTest < ActiveSupport::TestCase
     run = SeedRun.recent.first
     assert_equal "failed", run.status
     assert_match(/Unexpected error \(ArgumentError\)/, run.error_message)
+  end
+
+  test "an unmapped DummyJSON category leaves the Shopify category out of the request" do
+    input = Shopify::ProductImporter.new.send(:product_input,
+      { "id" => 99, "title" => "Lamp", "price" => 10, "category" => "home-decoration", "thumbnail" => "https://x/y.webp" })
+
+    assert_equal "Home Decoration", input[:productType]
+    assert_not input.key?(:category)
   end
 end

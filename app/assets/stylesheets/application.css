@@ -322,3 +322,5 @@ dl.kv.kv-flush { margin: 0; padding: 0; border: 0; }
   border: 2px solid var(--border-strong); border-top-color: var(--primary);
   animation: spin .8s linear infinite;
 }
+
+.compare-at { display: block; font-size: 12px; color: var(--muted); }

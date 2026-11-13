@@ -21,7 +21,7 @@
     </div>
     <div class="table-wrap">
       <table class="results">
-        <thead><tr><th>Variant</th><th>Option</th><th>Price</th><th>SKU</th></tr></thead>
+        <thead><tr><th>Variant</th><th>Option</th><th>Price</th><th>SKU</th><th>Barcode</th><th>Weight</th></tr></thead>
         <tbody>
           <%= render partial: "variant_row", collection: @product.dig("variants", "nodes"), as: :variant %>
         </tbody>
@@ -41,6 +41,7 @@
       <dl class="kv kv-flush">
         <dt>Vendor</dt><dd><%= @product["vendor"].presence || "–" %></dd>
         <dt>Type</dt><dd><%= @product["productType"].presence || "–" %></dd>
+        <dt>Category</dt><dd><%= @product.dig("category", "fullName").presence || "–" %></dd>
         <dt>Tags</dt><dd><%= Array(@product["tags"]).join(", ").presence || "–" %></dd>
         <dt>Created</dt><dd><%= l(Time.zone.parse(@product["createdAt"]), format: :long) %></dd>
       </dl>

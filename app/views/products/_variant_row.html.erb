@@ -1,6 +1,14 @@
+<% weight = variant.dig("inventoryItem", "measurement", "weight") %>
 <tr>
   <td><span class="product-title"><%= variant["title"] %></span></td>
   <td class="meta"><%= Array(variant["selectedOptions"]).map { |o| "#{o['name']}: #{o['value']}" }.join(", ") %></td>
-  <td><strong><%= number_to_currency(variant["price"]) %></strong></td>
+  <td>
+    <strong><%= number_to_currency(variant["price"]) %></strong>
+    <% if variant["compareAtPrice"].present? %>
+      <s class="compare-at"><%= number_to_currency(variant["compareAtPrice"]) %></s>
+    <% end %>
+  </td>
   <td class="mono"><%= variant["sku"].presence || "–" %></td>
+  <td class="mono"><%= variant.dig("barcodes", "nodes", 0, "value").presence || "–" %></td>
+  <td><%= weight && weight["value"].to_f.positive? ? "#{weight['value'].to_f.round(2).to_s.delete_suffix('.0')} #{weight_unit_label(weight['unit'])}" : "–" %></td>
 </tr>

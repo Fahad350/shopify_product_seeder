@@ -47,6 +47,10 @@ module ApplicationHelper
     { "ACTIVE" => "badge-ok", "DRAFT" => "badge-warn", "ARCHIVED" => "badge-muted" }.fetch(status.to_s, "badge-muted")
   end
 
+  def weight_unit_label(unit)
+    { "KILOGRAMS" => "kg", "GRAMS" => "g", "POUNDS" => "lb", "OUNCES" => "oz" }.fetch(unit.to_s, unit.to_s.downcase)
+  end
+
   # "gid://shopify/Product/123" -> "123" (used in our own URLs).
   def product_numeric_id(product)
     product["id"].to_s.split("/").last
