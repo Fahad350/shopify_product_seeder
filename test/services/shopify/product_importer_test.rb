@@ -34,7 +34,8 @@ class Shopify::ProductImporterTest < ActiveSupport::TestCase
         input["title"] == "Essence Mascara Lash Princess" &&
         input["variants"].map { |v| v["price"] } == %w[9.99 12.49] &&
         input["variants"].map { |v| v["sku"] } == %w[BEA-ESS-ESS-001-STD BEA-ESS-ESS-001-PRM] &&
-        input["files"].first["originalSource"].end_with?("thumbnail.webp")
+        input["files"].first["originalSource"].end_with?("thumbnail.webp") &&
+        input["tags"] == %w[dummyjson seeded beauty mascara]
     end
   end
 

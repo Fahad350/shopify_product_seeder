@@ -83,11 +83,10 @@ class ProductSeedsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "table.results tbody tr", 3
-    assert_select "tr.row-deleted", 0 # can't check Shopify, so nothing is marked deleted
     assert_select "a.shopify-link", 3
   end
 
-  test "products deleted in Shopify are marked in the last run, without a broken link" do
+  test "products deleted in Shopify are removed from the last-run table" do
     create_setting
     stub_token("tok-1")
     stub_dummyjson
@@ -98,12 +97,25 @@ class ProductSeedsControllerTest < ActionDispatch::IntegrationTest
 
     get product_seeds_path
 
-    assert_select "table.results tbody tr", 3 # history is kept
-    assert_select "tr.row-deleted", 1
-    assert_select "tr.row-deleted .deleted-note", "Deleted in Shopify"
-    assert_select "tr.row-deleted a.shopify-link", 0
+    assert_select "table.results tbody tr", 2 # like the Products page
+    assert_no_match "Eyeshadow Palette with Mirror", response.body
     assert_select "a.shopify-link", 2
-    assert_select ".stat-created .stat-num", "3" # counts still match the run
+  end
+
+  test "when every product from the last run was deleted in Shopify, the dashboard is empty" do
+    create_setting
+    stub_token("tok-1")
+    stub_dummyjson
+    shopify = FakeShopify.new
+    shopify.install(self)
+    Shopify::ProductImporter.call
+    shopify.products.clear
+
+    get product_seeds_path
+
+    assert_select ".empty strong", "No imports yet"
+    assert_select "table.results", 0
+    assert_select ".stats", 0
   end
 
   test "thumbnails still processing in Shopify show a spinner inside the auto-refresh frame" do

@@ -73,7 +73,7 @@ in the same organization as the app.
 3. Each result row shows the product's image and links to the product in the Shopify admin.
    Images are read live from Shopify. A just-created image takes a few seconds to process, so
    its thumbnail shows a spinner and the "Last run" card refreshes itself (every 3 seconds, up
-   to 4 times) until the image is ready. Products deleted in Shopify are marked as deleted.
+   to 4 times) until the image is ready. Products deleted in Shopify are removed from the table, like on the Products page.
 4. Open **Products** to see the seeded products, then click one to see its **two variants**
    (Standard and Premium) with price, SKU and image.
 
@@ -155,7 +155,7 @@ bin/rails db:test:prepare
 bin/rails test
 ```
 
-63 tests run in about one second. **No network is used**: WebMock blocks all real HTTP, and
+64 tests run in about one second. **No network is used**: WebMock blocks all real HTTP, and
 `test/support/fake_shopify.rb` is a small in-memory fake of the GraphQL endpoint. The tests
 use their own encryption keys, so they **do not need `config/master.key`**.
 
@@ -165,7 +165,7 @@ use their own encryption keys, so they **do not need `config/master.key`**.
 | GraphQL client | **401 → refresh → exactly one retry**; second 401 stops; top-level errors; 403/404/429/5xx; timeouts; secrets removed from errors |
 | Importer | 3 created with 2 variants and an image; **second run skips all and writes nothing**; repair of partial imports; `userErrors` recorded and run continues; failed product recovered on next run; wrong metafield type; DummyJSON outage; **concurrent run blocked** |
 | Settings | secret encrypted in DB, never rendered, filtered from logs; Connected/Failed status; validation |
-| Dashboard | counts and results shown; `userErrors` shown in the UI; live Shopify thumbnails, with a fallback when Shopify is unreachable; products deleted in Shopify marked as deleted; spinner while a new image is processing |
+| Dashboard | counts and results shown; `userErrors` shown in the UI; live Shopify thumbnails, with a fallback when Shopify is unreachable; products deleted in Shopify removed from the table (empty state if all were deleted); spinner while a new image is processing |
 | Products pages | list of seeded products; detail page with both variants, prices and SKUs; unknown or non-seeded product; Shopify errors shown instead of crashing |
 
 Code quality: `bin/rubocop` (0 offenses) and `bin/brakeman` (0 warnings).

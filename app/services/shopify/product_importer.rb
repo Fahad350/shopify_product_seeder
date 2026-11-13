@@ -146,7 +146,8 @@ module Shopify
         vendor: source["brand"].presence || "DummyJSON",
         productType: source["category"].to_s.titleize,
         status: "ACTIVE",
-        tags: [ "dummyjson", "seeded" ],
+        # Our tags first ("seeded" is how the Products pages find these products), then DummyJSON's.
+        tags: ([ "dummyjson", ProductCatalog::SEEDED_TAG ] + Array(source["tags"]).map(&:to_s)).compact_blank.uniq,
         productOptions: [ { name: "Edition", values: VARIANTS.map { |v| { name: v[:name] } } } ],
         variants: VARIANTS.map do |v|
           {
