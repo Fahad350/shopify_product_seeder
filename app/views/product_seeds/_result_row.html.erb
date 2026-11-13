@@ -1,8 +1,9 @@
+<% image_url = live_images[result["shopify_id"]].presence || result["image_url"] %>
 <tr>
   <td>
     <div class="product">
-      <% if result["image_url"].present? %>
-        <img class="thumb" src="<%= result["image_url"] %>" alt="" loading="lazy" onerror="this.removeAttribute('src')">
+      <% if image_url.present? %>
+        <img class="thumb" src="<%= image_url %>" alt="" loading="lazy" onerror="this.removeAttribute('src')">
       <% else %>
         <span class="thumb"></span>
       <% end %>

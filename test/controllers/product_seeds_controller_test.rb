@@ -52,4 +52,36 @@ class ProductSeedsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to product_seeds_path
     assert_match(/already running/, flash[:alert])
   end
+
+  test "dashboard thumbnails use the current Shopify image, not the stored fallback" do
+    create_setting
+    stub_token("tok-1")
+    stub_dummyjson
+    FakeShopify.new.install(self)
+    run = Shopify::ProductImporter.call
+    # As if the image was still processing at seed time.
+    run.results.each { |r| r["image_url"] = "https://cdn.dummyjson.com/fallback.webp" }
+    run.save!
+
+    get product_seeds_path
+
+    assert_select "img.thumb[src^='https://cdn.shopify.com/']", 3
+    assert_select "img.thumb[src*='dummyjson']", 0
+  end
+
+  test "dashboard still renders stored thumbnails when Shopify is unreachable" do
+    create_setting
+    stub_token("tok-1")
+    stub_dummyjson
+    FakeShopify.new.install(self)
+    Shopify::ProductImporter.call
+    WebMock.reset!
+    stub_token("tok-1")
+    stub_request(:post, ShopifyTestHelpers::GRAPHQL_URL).to_return(status: 503)
+
+    get product_seeds_path
+
+    assert_response :success
+    assert_select "table.results tbody tr", 3
+  end
 end

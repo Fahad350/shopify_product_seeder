@@ -18,7 +18,7 @@
           <tr><th>Product</th><th>DummyJSON ID</th><th>Result</th><th>Details</th></tr>
         </thead>
         <tbody>
-          <%= render partial: "result_row", collection: run.results, as: :result, locals: { setting: setting } %>
+          <%= render partial: "result_row", collection: run.results, as: :result, locals: { setting: setting, live_images: live_images } %>
         </tbody>
       </table>
     </div>
